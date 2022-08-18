@@ -5,13 +5,19 @@ import json
 from secrets import token_bytes
 from hashlib import sha256
 from base64 import urlsafe_b64encode
-from requests import Request, post, request
+from requests import request
+from urllib.parse import urlencode
+from urllib.parse import quote_plus
 
 from scope import Scope
 
 
 CONNECT_URL = "https://www.etsy.com/oauth/connect"
 TOKEN_URL = "https://api.etsy.com/v3/public/oauth/token"
+
+
+def etsy_b64encode(data: str) -> bytes:
+    return urlsafe_b64encode(data).rstrip(b"=")
 
 
 @dataclass(frozen=True)
@@ -21,32 +27,25 @@ class Auth:
     redirect: str
 
     def setup_auth(self) -> AuthState:
-        verifier = token_bytes(32)
+        verifier = etsy_b64encode(token_bytes(32))
         h = sha256()
         h.update(verifier)
-        sha = h.digest()
+        sha = etsy_b64encode(h.digest())
 
-        state = token_bytes(32)
+        state = etsy_b64encode(token_bytes(32))
 
         scopes = " ".join([s.value for s in self.scopes])
 
-        r = Request(
-            method="GET",
-            url=CONNECT_URL,
-            data={
-                "response_type": "code",
-                "client_id": self.keystring,
-                "redirect_uri": self.redirect,
-                "scope": scopes,
-                "state": urlsafe_b64encode(state),
-                "code_challenge": urlsafe_b64encode(sha),
-                "code_challenge_method": "S256",
-            }
-        )
-        url = r.prepare().url
-        if not url:
-            raise ValueError("Malformed data to URL builder")
-
+        params = urlencode({
+            "response_type": "code",
+            "client_id": self.keystring,
+            "redirect_uri": self.redirect,
+            "scope": scopes,
+            "state": state,
+            "code_challenge": sha,
+            "code_challenge_method": "S256",
+        })
+        url = f"{CONNECT_URL}?{params}"
         return AuthState(url, verifier, state)
 
     def _token_request(self, method: str, grant: str, **kwargs: str | bytes) -> dict:
@@ -57,7 +56,7 @@ class Auth:
         )
         response = dict(json.loads(r.content.decode("utf-8")))
         if "error" in response:
-            raise ValueError(response["error"])
+            raise ValueError(response["error"] + ": " + response["error_description"])
         else:
             return response
 
@@ -67,7 +66,7 @@ class Auth:
             "authorization_code",
             redirect_uri=self.redirect,
             code=auth_code,
-            code_verifier=urlsafe_b64encode(state.verifier),
+            code_verifier=state.verifier,
         )
         return AuthTokens(data["access_token"], data["refresh_token"])
 

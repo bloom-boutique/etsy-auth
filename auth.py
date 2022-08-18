@@ -1,15 +1,17 @@
 from __future__ import annotations
 from dataclasses import dataclass
+import json
 
 from secrets import token_bytes
 from hashlib import sha256
 from base64 import urlsafe_b64encode
-from requests import Request
+from requests import Request, post
 
 from scope import Scope
 
 
 CONNECT_URL = "https://www.etsy.com/oauth/connect"
+TOKEN_URL = "https://api.etsy.com/v3/public/oauth/token"
 
 
 @dataclass(frozen=True)
@@ -47,8 +49,23 @@ class Auth:
 
         return AuthState(url, verifier, state)
 
-    def get_token(self, response: str) -> str:
-        ...
+    def get_token(self, state: AuthState, auth_code: str) -> AuthTokens:
+        r = post(
+            TOKEN_URL,
+            data={
+                "grant_type": "authorization_code",
+                "client_id": self.keystring,
+                "redirect_uri": self.redirect,
+                "code": auth_code,
+                "code_verifier": urlsafe_b64encode(state.verifier)
+            }
+        )
+
+        data = json.loads(r.content)
+        if "error" in data:
+            raise ValueError(data["error"])
+        
+        return AuthTokens(data["access_token"], data["refresh_token"])
 
     def refresh_token(self, token: str) -> str:
         ...
@@ -59,3 +76,9 @@ class AuthState:
     auth_url: str
     verifier: bytes
     state: bytes
+
+
+@dataclass(frozen=True)
+class AuthTokens:
+    access: str
+    refresh: str

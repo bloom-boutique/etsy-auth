@@ -9,6 +9,9 @@ from requests import Request
 from scope import Scope
 
 
+CONNECT_URL = "https://www.etsy.com/oauth/connect"
+
+
 @dataclass(frozen=True)
 class Auth:
     keystring: str
@@ -27,7 +30,7 @@ class Auth:
 
         r = Request(
             method="GET",
-            url="https://www.etsy.com/oauth/connect",
+            url=CONNECT_URL,
             data={
                 "response_type": "code",
                 "client_id": self.keystring,

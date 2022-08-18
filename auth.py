@@ -5,7 +5,7 @@ import json
 from secrets import token_bytes
 from hashlib import sha256
 from base64 import urlsafe_b64encode
-from requests import Request, post
+from requests import Request, post, request
 
 from scope import Scope
 
@@ -49,26 +49,35 @@ class Auth:
 
         return AuthState(url, verifier, state)
 
-    def get_token(self, state: AuthState, auth_code: str) -> AuthTokens:
-        r = post(
+    def _token_request(self, method: str, grant: str, **kwargs: str | bytes) -> dict:
+        r = request(
+            method,
             TOKEN_URL,
-            data={
-                "grant_type": "authorization_code",
-                "client_id": self.keystring,
-                "redirect_uri": self.redirect,
-                "code": auth_code,
-                "code_verifier": urlsafe_b64encode(state.verifier)
-            }
+            data={"grant_type": grant, "client_id": self.keystring} | kwargs,
         )
+        response = dict(json.loads(r.content.decode("utf-8")))
+        if "error" in response:
+            raise ValueError(response["error"])
+        else:
+            return response
 
-        data = json.loads(r.content)
-        if "error" in data:
-            raise ValueError(data["error"])
-        
+    def get_token(self, state: AuthState, auth_code: str) -> AuthTokens:
+        data = self._token_request(
+            "POST",
+            "authorization_code",
+            redirect_uri=self.redirect,
+            code=auth_code,
+            code_verifier=urlsafe_b64encode(state.verifier),
+        )
         return AuthTokens(data["access_token"], data["refresh_token"])
 
-    def refresh_token(self, token: str) -> str:
-        ...
+    def refresh_token(self, token: str) -> AuthTokens:
+        data = self._token_request(
+            "GET",
+            "refresh_token",
+            refresh_token=token,
+        )
+        return AuthTokens(data["access_token"], data["refresh_token"])
 
 
 @dataclass(frozen=True)

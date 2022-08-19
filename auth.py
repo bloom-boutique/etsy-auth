@@ -76,8 +76,7 @@ class Auth:
         )
         response = dict(json.loads(r.content.decode("utf-8")))
         if "error" in response:
-            raise ValueError(response["error"] +
-                             ": " + response["error_description"])
+            raise ValueError(response["error"])
         else:
             return response
 

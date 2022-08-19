@@ -36,7 +36,7 @@ def code_from_http_request(handler: BaseHTTPRequestHandler) -> tuple[str, bytes]
     if "code" not in query:
         return None
     elif "error" in query:
-        raise ValueError(query["error"] + ": " + query["error_description"])
+        raise ValueError(query["error"])
 
     return query["code"][0], query["state"][0]
 

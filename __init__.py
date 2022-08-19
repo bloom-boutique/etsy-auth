@@ -1,1 +1,1 @@
-from auth import Auth, AuthTokens
+from .auth import Auth, AuthTokens

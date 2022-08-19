@@ -98,7 +98,7 @@ class Auth:
         Given a refresh token obtained from `Auth.get_token`, exdchange it for new authentication keys.
         """
         data = self._token_request(
-            "GET",
+            "POST",
             "refresh_token",
             refresh_token=token,
         )

@@ -8,7 +8,7 @@ from base64 import urlsafe_b64encode
 from requests import request
 from urllib.parse import urlencode
 
-from scope import Scope
+from .scope import Scope
 
 
 CONNECT_URL = "https://www.etsy.com/oauth/connect"

@@ -2,8 +2,8 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import webbrowser
 
-from auth import Auth, AuthState, AuthTokens
-from scope import Scope
+from .auth import Auth, AuthState, AuthTokens
+from .scope import Scope
 
 
 class _Handler(BaseHTTPRequestHandler):

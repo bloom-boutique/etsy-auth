@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from os import path
 import webbrowser
 import requests
@@ -8,10 +9,11 @@ from .auth import BASE, Auth, AuthTokens
 from .localhost import localhost_redirect
 
 
-class CredentialStore:
+@dataclass
+class TokenStore:
     """
     Wrapper around an Etsy authentication session that will automatically load
-    and store keys from `~/.etsy-keys`.
+    and store keys from `~/.etsy_keys`.
     """
     auth: Auth
     path: str = path.join(path.expanduser("~"), ".etsy_keys")

@@ -19,8 +19,7 @@ class TokenStore:
     path: str = path.join(path.expanduser("~"), ".etsy_keys")
 
 
-    def __init__(self) -> None:
-        self.listing_cache = {}
+    def __post_init__(self) -> None:
         try:
             self._load_tokens()
         except FileNotFoundError:

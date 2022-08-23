@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 from .scope import Scope
 
 
+BASE = "https://openapi.etsy.com"
 CONNECT_URL = "https://www.etsy.com/oauth/connect"
 TOKEN_URL = "https://api.etsy.com/v3/public/oauth/token"
 

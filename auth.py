@@ -16,7 +16,7 @@ CONNECT_URL = "https://www.etsy.com/oauth/connect"
 TOKEN_URL = "https://api.etsy.com/v3/public/oauth/token"
 
 
-def url_safe(data: str) -> bytes:
+def url_safe(data: bytes) -> bytes:
     return urlsafe_b64encode(data).rstrip(b"=")
 
 

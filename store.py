@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from os import path
+import os
 import webbrowser
 import requests
 from urllib.parse import urljoin
@@ -16,8 +16,7 @@ class TokenStore:
     and store keys from `~/.etsy_keys`.
     """
     auth: Auth
-    path: str = path.join(path.expanduser("~"), ".etsy_keys")
-
+    path: str = os.path.join(os.path.expanduser("~"), ".etsy_keys")
 
     def __post_init__(self) -> None:
         try:
@@ -28,7 +27,7 @@ class TokenStore:
     def _dump_tokens(self) -> None:
         with open(self.path, "w") as f:
             f.write(self.tokens.access + "\n" + self.tokens.refresh)
-        
+
     def _load_tokens(self) -> None:
         with open(self.path, "r") as f:
             self.tokens = AuthTokens(*f.read().split())
@@ -44,7 +43,7 @@ class TokenStore:
     def _refresh(self) -> None:
         self.tokens = self.auth.refresh_token(self.tokens.refresh)
         self._dump_tokens()
-    
+
     def _try_request(self, method: str, endpoint: str, params: dict[str, str]) -> dict[str, str] | None:
         r = requests.request(
             method,
@@ -56,13 +55,13 @@ class TokenStore:
             params=params,
         )
         return None if r.status_code == 401 else json.loads(r.content.decode("utf-8"))
-    
+
     def _handle(self, data: dict[str, str]) -> dict[str, str]:
         if "error" in data:
             raise UserWarning(data["error"] + ": " + data["error_description"])
-        
+
         return data
-    
+
     def api_request(self, method: str, endpoint: str, params: dict[str, str]) -> dict[str, str]:
         """
         Make a single request to the Etsy API.
@@ -70,14 +69,18 @@ class TokenStore:
         If 90 days has elapsed since last user auth, perform localhost auth workflow and try again.
         """
         r1 = self._try_request(method, endpoint, params)
-        if r1 is not None: return self._handle(r1)
+        if r1 is not None:
+            return self._handle(r1)
 
         self._refresh()
         r2 = self._try_request(method, endpoint, params)
-        if r2 is not None: return self._handle(r2)
+        if r2 is not None:
+            return self._handle(r2)
 
         self._auth_workflow()
         r3 = self._try_request(method, endpoint, params)
-        if r3 is not None: return self._handle(r3)
+        if r3 is not None:
+            return self._handle(r3)
 
-        raise UserWarning("Unknown authentication error - is the Etsy API down?")
+        raise UserWarning(
+            "Unknown authentication error - is the Etsy API down?")

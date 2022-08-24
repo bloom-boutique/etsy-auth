@@ -63,7 +63,7 @@ class TokenStore:
 
         return data
 
-    def api_request(self, method: str, endpoint: str, params: dict[str, str]) -> dict[str, Any]:
+    def api_request(self, method: str, endpoint: str, params: dict[str, Any]) -> dict[str, Any]:
         """
         Make a single request to the Etsy API.
         If an hour has elapsed since last request, refresh the tokens and try again.

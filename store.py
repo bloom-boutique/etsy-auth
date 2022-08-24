@@ -1,9 +1,10 @@
+from typing import Any
 from dataclasses import dataclass
 import os
-import webbrowser
+import json
 import requests
 from urllib.parse import urljoin
-import json
+import webbrowser
 
 from .auth import BASE, Auth, AuthTokens
 from .localhost import localhost_redirect
@@ -44,7 +45,7 @@ class TokenStore:
         self.tokens = self.auth.refresh_token(self.tokens.refresh)
         self._dump_tokens()
 
-    def _try_request(self, method: str, endpoint: str, params: dict[str, str]) -> dict[str, str] | None:
+    def _try_request(self, method: str, endpoint: str, params: dict[str, str]) -> dict[str, Any] | None:
         r = requests.request(
             method,
             urljoin(BASE, endpoint),
@@ -62,7 +63,7 @@ class TokenStore:
 
         return data
 
-    def api_request(self, method: str, endpoint: str, params: dict[str, str]) -> dict[str, str]:
+    def api_request(self, method: str, endpoint: str, params: dict[str, str]) -> dict[str, Any]:
         """
         Make a single request to the Etsy API.
         If an hour has elapsed since last request, refresh the tokens and try again.

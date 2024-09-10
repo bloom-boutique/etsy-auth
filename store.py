@@ -59,7 +59,7 @@ class TokenStore:
 
     def _handle(self, data: dict[str, str]) -> dict[str, str]:
         if "error" in data:
-            raise UserWarning(data["error"] + ": " + data["error_description"])
+            raise UserWarning(data["error"])
 
         return data
 
@@ -73,10 +73,13 @@ class TokenStore:
         if r1 is not None:
             return self._handle(r1)
 
-        self._refresh()
-        r2 = self._try_request(method, endpoint, params)
-        if r2 is not None:
-            return self._handle(r2)
+        try:
+            self._refresh()
+            r2 = self._try_request(method, endpoint, params)
+            if r2 is not None:
+                return self._handle(r2)
+        except Exception as e:
+            print(e)
 
         self._auth_workflow()
         r3 = self._try_request(method, endpoint, params)
